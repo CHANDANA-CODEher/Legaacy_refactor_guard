@@ -1,3 +1,4 @@
+
 # Legacy Refactor Guard (Backend)
 
 An autonomous, safety-first Python refactoring agent designed to refactor legacy code without breaking existing functionality.
@@ -399,3 +400,7 @@ To maintain transparency and engineering integrity:
    This codebase contains only the refactoring agent backend, safety guards, and CLI/demo entrypoints. Frontend visualizations and dashboard components are maintained separately.
 5. **Filesystem-Based Rollback:**
    Rollbacks restore individual file contents from snapshots in memory. They do not interact with Git branches, commits, or stashes.
+
+# Legaacy_refactor_guard
+AI-powered code refactoring with automated testing, safety checks, and rollback.
+
