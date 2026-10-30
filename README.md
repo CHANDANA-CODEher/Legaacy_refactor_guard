@@ -103,6 +103,7 @@ legacy refactor/
 ├── requirements.txt          # Python dependencies
 ├── run_demo.py               # End-to-end demonstration script
 ├── run_log.json              # Standardized output log from the latest run
+├── web_api.py                # FastAPI testing & dashboard backend API
 ├── README.md                 # Project documentation
 │
 ├── agent/                    # Core backend package
@@ -118,14 +119,22 @@ legacy refactor/
 │   └── tests/
 │       └── test_shop.py      # 8 comprehensive unit tests for shop.py
 │
+├── frontend/                 # Connected React + TypeScript + Vite Dashboard
+│   ├── index.html            # Single page app entrypoint
+│   ├── package.json          # Node dependencies (React 18, Recharts, Lucide, Tailwind)
+│   ├── vite.config.ts        # Vite build & dev server config (127.0.0.1:5173)
+│   ├── .env.example          # VITE_API_BASE_URL template
+│   └── src/                  # Dashboard components, services, and state
+│
 ├── outputs/                  # Archive directory for previous run logs
 │
-└── tests/                    # Complete backend unit & integration test suite
+└── tests/                    # Complete backend unit & integration test suite (125 tests)
     ├── test_agent.py         # 9 tests for RefactorAgent workflow
     ├── test_guard.py         # 24 tests for path safety, AST validation & snapshots
     ├── test_llm.py           # 26 tests for mock & Nebius providers
     ├── test_logger.py        # 13 tests for contract schema, atomic writes & archiving
-    └── test_runner.py        # 14 tests for pytest subprocess execution & parsing
+    ├── test_runner.py        # 14 tests for pytest subprocess execution & parsing
+    └── test_web_api.py       # 31 tests for endpoints, CORS, and frontend integration
 ```
 
 ---
@@ -243,9 +252,45 @@ Open Chrome and navigate to:
 ### Available Endpoints
 - **`GET /health`**: Verifies that the API service is active and confirms binding to `127.0.0.1`.
 - **`GET /demo/status`**: Performs safe, read-only inspection of `demo_repo` (file existence, AST syntax check, and test verification) without mutating any files on disk.
+- **`GET /api/dashboard`**: Aggregated live repository metrics and run log formatted for the React dashboard.
+- **`GET /api/log`**: Serves the current `run_log.json` content in read-only mode.
+- **`GET /api/history`**: Lists historical run summaries from the `outputs/` archive directory.
+- **`GET /api/run-log`**: Formatted run log endpoint for frontend consumption.
+- **`GET /api/metrics`**: Quality metrics for dashboard visualization.
+- **`POST /api/runs`**: Protected safety endpoint (returns 501 Not Implemented; prevents file mutation via HTTP).
 - **`GET /docs`**: Interactive Swagger UI testing console.
 
-> **Safety Notice:** Bound strictly to `127.0.0.1` (never `0.0.0.0`). The API does not accept arbitrary file paths or source code. `POST /demo/run` is intentionally not implemented to protect workspace files from mutation via HTTP requests.
+> **Safety Notice:** Bound strictly to `127.0.0.1` (never `0.0.0.0`). The API does not accept arbitrary file paths or source code. `POST /demo/run` and `POST /api/runs` are protected to prevent workspace file mutation via HTTP requests.
+
+---
+
+## Running the React Frontend Dashboard
+
+The project includes an interactive React + TypeScript + Vite dashboard located in `frontend/`.
+
+### 1. Install Frontend Dependencies
+```powershell
+cd frontend
+npm install
+```
+
+### 2. Configure Environment (Optional)
+The frontend automatically defaults to `http://127.0.0.1:8000`. To customize:
+```powershell
+Copy-Item .env.example .env
+```
+
+### 3. Start Frontend Development Server
+```powershell
+npm run dev
+```
+Open your browser at: **http://127.0.0.1:5173**
+
+### 4. Build for Production
+```powershell
+npm run build
+npm run preview
+```
 
 ---
 

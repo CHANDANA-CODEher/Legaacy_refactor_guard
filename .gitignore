@@ -6,11 +6,15 @@ htmlcov/
 .env
 .env.*
 !.env.example
+frontend/.env
+frontend/.env.*
+!frontend/.env.example
 venv/
 .venv/
 env/
 ENV/
 outputs/
+run_log.json
 *.log
 *.db
 *.sqlite3
@@ -18,3 +22,6 @@ outputs/
 .idea/
 .DS_Store
 Thumbs.db
+node_modules/
+dist/
+.vite/

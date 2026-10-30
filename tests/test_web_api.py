@@ -60,6 +60,10 @@ class TestWebAPIDocs:
         assert "/demo/status" in schema["paths"]
         assert "/api/log" in schema["paths"]
         assert "/api/history" in schema["paths"]
+        assert "/api/dashboard" in schema["paths"]
+        assert "/api/run-log" in schema["paths"]
+        assert "/api/metrics" in schema["paths"]
+        assert "/api/runs" in schema["paths"]
 
 
 class TestWebAPIDemoStatus:
@@ -310,8 +314,12 @@ class TestWebAPIAccidentalFileModification:
         client.get("/demo/status")
         client.get("/api/log")
         client.get("/api/history")
+        client.get("/api/dashboard")
+        client.get("/api/run-log")
+        client.get("/api/metrics")
         client.get("/docs")
         client.options("/api/log", headers={"Origin": "http://localhost:3000"})
+        client.options("/api/dashboard", headers={"Origin": "http://localhost:5173"})
 
         # Verify shop.py is 100% byte-for-byte identical
         assert shop_file.read_bytes() == shop_bytes_before
@@ -319,3 +327,62 @@ class TestWebAPIAccidentalFileModification:
         # Verify run_log.json is 100% byte-for-byte identical and unmodified
         assert run_log_file.read_bytes() == log_bytes_before
         assert run_log_file.stat().st_mtime == log_mtime_before
+
+
+class TestWebAPIDashboardIntegration:
+    """Tests for React frontend integration endpoints."""
+
+    def test_get_dashboard_returns_valid_frontend_contract(self) -> None:
+        response = client.get("/api/dashboard")
+        assert response.status_code == 200
+        data = response.json()
+        assert data["source"] == "backend"
+        assert "runLog" in data
+        assert "metrics" in data
+
+        run_log = data["runLog"]
+        assert run_log["repositoryName"] == "demo_repo"
+        assert "startedAt" in run_log
+        assert "baselineTests" in run_log
+        assert run_log["baselineTests"]["total"] >= 0
+        assert "attempts" in run_log
+        assert isinstance(run_log["attempts"], list)
+        if run_log["attempts"]:
+            att = run_log["attempts"][0]
+            assert "targetFile" in att
+            assert "tests" in att
+            assert att["status"] in ("accepted", "rolled_back", "failed")
+        assert "finalTests" in run_log
+        assert "filesChanged" in run_log
+
+        metrics = data["metrics"]
+        assert len(metrics) == 3
+        metric_keys = {m["key"] for m in metrics}
+        assert metric_keys == {"linesOfCode", "complexity", "duplicateBlocks"}
+
+    def test_get_run_log_frontend_format(self) -> None:
+        response = client.get("/api/run-log")
+        assert response.status_code == 200
+        data = response.json()
+        assert "repositoryName" in data
+        assert "baselineTests" in data
+        assert "attempts" in data
+
+    def test_get_metrics(self) -> None:
+        response = client.get("/api/metrics")
+        assert response.status_code == 200
+        data = response.json()
+        assert isinstance(data, list)
+        assert len(data) == 3
+
+    def test_post_runs_returns_501_safety_notice(self) -> None:
+        response = client.post("/api/runs", json={"repositoryPath": "demo_repo"})
+        assert response.status_code == 501
+        assert "disabled for safety" in response.json()["detail"]
+
+    def test_get_run_status(self) -> None:
+        response = client.get("/api/runs/test-run-123/status")
+        assert response.status_code == 200
+        data = response.json()
+        assert data["status"] == "accepted"
+        assert data["stage"] == "decision"
