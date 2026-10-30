@@ -1,0 +1,12 @@
+# Core test execution and reporting
+pytest>=8.0.0
+
+# Environment variable management
+python-dotenv>=1.0.0
+
+# HTTP client for future Nebius Token Factory API calls
+requests>=2.31.0
+
+# Minimal Web API and testing interface
+fastapi>=0.100.0
+uvicorn>=0.20.0
